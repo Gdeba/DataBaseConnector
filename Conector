@@ -1,0 +1,105 @@
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+/**
+ *
+ * @author Guillermo Dearmas
+ */
+public class ConectorBD {
+
+    private Connection conexion;
+    private Statement sentencia;
+    static Connection con; 
+
+    //Datos para la conexión con la BD
+    private final String servidor = "localhost";
+    private final String puerto = "3306";
+    private final String BD = ""; //Nombre de la BBDD
+    private final String usuario = ""; //Usuario de la BBDD
+    private final String clave = "";//Contraseña de la BBDD
+    private final String URL = "jdbc:mysql://localhost//*Nombre de la BBDD*/?useSSL=false"; // Se añade useSSL=false para que no salgan advertencias de MySQL respecto a certificados
+
+    /**
+     * Constructor que inicializa los atributos internos del conector de BD
+     */
+    public ConectorBD() {
+        this.conexion = null;
+        this.sentencia = null;
+    }
+
+    /**
+     * Creamos un método para la conexión a la BD
+     */
+    public boolean conectar() {
+        boolean estado = false;
+        try{
+            // Cargar el driver de MySQL
+            Class.forName("com.mysql.jdbc.Driver");
+            try {
+                //Establecemos la conexión con la BD
+                setConexion(DriverManager.getConnection(URL, usuario, clave)); 
+                estado = true;
+            } catch (SQLException ex) {
+                System.err.println("ERROR: ConectorBD.conectar()");
+                System.err.println("Al intentar conectar con la BD");
+                System.err.println(ex.getMessage());
+            }
+        }catch(ClassNotFoundException ex){
+            System.err.println("ERROR: ConectorBD.conectar()");
+            System.err.println("Al intentar conectar con la BD");
+            System.err.println(ex.getMessage());
+        }
+        return estado;
+    }
+    
+    /*
+     * Creamos un método ejecutar para ejecutar sentencias SQL: INSERT, UPDATE, DELETE.
+     * sql1 texto con el script sql para ejecutar sobre la BD
+     */
+    public boolean ejecutar(String sql1){
+        boolean estado = false;
+        try{
+            sentencia = getConexion().createStatement();
+            sentencia.execute(sql1);
+            sentencia.close();
+            estado = true;
+        }catch(SQLException sqle){
+            System.err.println("ERROR: ConectorBD.ejecutar(sql1)");
+            System.err.println(sqle.getMessage());
+        }
+        return estado;
+    }
+    
+    /*
+     * Creamos el método desconectar para cerrar la conexión de forma correcta 
+     * con la base de datos, verificando que existe la conexión
+     */
+    public void desconectar(){
+        try{
+            if(getConexion() != null){
+                getConexion().close();
+                setConexion(null);
+            }
+        }catch(SQLException sqle){
+            System.err.println("ERROR: ConectorBD.desconectar()");
+            System.err.println(sqle.getMessage());
+        }
+    }
+
+    /**
+     * @return the conexion
+     */
+    public Connection getConexion() {
+        return conexion;
+    }
+
+    /**
+     * @param conexion the conexion to set
+     */
+    public void setConexion(Connection conexion) {
+        this.conexion = conexion;
+    }
+}
